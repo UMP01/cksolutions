@@ -454,7 +454,7 @@
 
         </div><!-- end of container -->
     </section><!-- end of project section -->
-    
+
     <!-- Contact Section -->
     <section class="section" id="contact">
         <div class="container text-center">
@@ -513,15 +513,31 @@
 
             const botToken = '6720606437:AAHbjcOt_TI1rAGYsQD3egQL4gw-hsmOJRw';
             const chatId = '@phoudychannel';
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const message = document.getElementById('message').value;
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const message = document.getElementById('message').value.trim();
+
+            // Validate inputs
+            if (!name || !email || !message) {
+                showAlert('All fields are required.', 'danger');
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showAlert('Please enter a valid email address.', 'danger');
+                return;
+            }
+
+            // Escape Markdown characters
+            const escapeMarkdown = (text) => text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
+            const safeName = escapeMarkdown(name);
+            const safeEmail = escapeMarkdown(email);
+            const safeMessage = escapeMarkdown(message);
 
             const text = `
                 📬 *New Contact Form Submission*:
-                👤 Name: ${name}
-                📧 Email: ${email}
-                ✉️ Message: ${message}
+                👤 Name: ${safeName}
+                📧 Email: ${safeEmail}
+                ✉️ Message: ${safeMessage}
             `;
 
             fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -533,16 +549,16 @@
                     parse_mode: 'Markdown',
                 }),
             })
-                .then(response => response.json())
-                .then(data => {
+                .then((response) => response.json())
+                .then((data) => {
                     if (data.ok) {
                         showAlert('Message sent successfully!', 'success');
                         clearForm();
                     } else {
-                        showAlert('Failed to send the message. Please try again.', 'danger');
+                        showAlert(`Failed to send message: ${data.description}`, 'danger');
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error:', error);
                     showAlert('An error occurred. Please try again later.', 'danger');
                 });
@@ -558,11 +574,11 @@
             `;
             alertBox.style.display = 'block';
 
-            // Auto-close alert after 3 seconds
+            // Auto-close alert after 5 seconds
             setTimeout(() => {
                 alertBox.style.display = 'none';
                 alertBox.innerHTML = ''; // Clear the alert content
-            }, 3000);
+            }, 5000);
         }
 
         function clearForm() {
